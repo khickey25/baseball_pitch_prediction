@@ -23,3 +23,5 @@ xgboost
 shap
 lime
 scikit-optimize
+dask
+pybaseball
