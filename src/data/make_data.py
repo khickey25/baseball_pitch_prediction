@@ -5,9 +5,21 @@ import numpy as np
 from pybaseball import statcast_pitcher
 from pybaseball import playerid_lookup
 import pathlib
+import argparse
 
-PITCHER_NAMES = pathlib.Path.cwd().parents[1] / 'references' / 'pitcher_names.txt'
-DATA_FOLDER = pathlib.Path.cwd().parents[1] / 'data'
+ap = argparse.ArgumentParser()
+ap.add_argument("-f", "--file", required=True,
+                help="path to .txt file containing pitcher names")
+ap.add_argument("-o", "--output", required=True,
+                help="path to save created raw data csv file")
+
+args = vars(ap.parse_args())   
+
+
+PITCHER_NAMES = args['file']
+DATA_FOLDER = args['output']
+#PITCHER_NAMES = pathlib.Path.cwd().parents[1] / 'references' / 'pitcher_names.txt'
+#DATA_FOLDER = pathlib.Path.cwd().parents[1] / 'data'
 
 
 #set up a few constants
@@ -117,16 +129,14 @@ def convert_to_csv(dataframe):
         data {pandas Dataframe} -- the dataframe to be converted. 
     """    
     print('\n Converting dataframe to csv file')
-    dataframe.to_csv(DATA_FOLDER / 'raw' / 'Statcast_data.csv')
+    dataframe.to_csv(str(DATA_FOLDER) + 'Statcast_data.csv')
     print('\n Finshed!')
 
 
 def main():
-
-    names = read_pitchers(PITCHER_NAMES)
     
+    names = read_pitchers(PITCHER_NAMES)
     pitchers = collect_statcast(SAMPLE_SIZE, TARGET_CLASSES, FEATURES_TO_KEEP, names)
-
     convert_to_csv(pitchers)
 
 
