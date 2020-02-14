@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import argparse
+from sklearn.model_selection import train_test_split
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--data", required=True,
@@ -59,14 +60,16 @@ def prepare_data(file):
     return final_df
 
 def convert_to_csv(dataframe):
-    """Convert processed dataframe into csv file
+    """Convert processed dataframe into two csv files: a training set and a testing set. 
+    Will use 85% for the training set, and remaining 15% as a test set. 
     
     Arguments:
         dataframe {[pandas Dataframe]} -- Cleaned pandas dataframe object to be converted into csv file
     """    
-    
-    print('\n Converting dataframe to csv file')
-    dataframe.to_csv(OUTPUT_FOLDER + 'Statcast_data_cleaned.csv')
+    X_train, X_test = train_test_split(dataframe, test_size=.15, random_state=777)
+    print('\n Converting dataframes to csv files')
+    X_train.to_csv(OUTPUT_FOLDER + 'Statcast_train.csv')
+    X_test.to_csv(OUTPUT_FOLDER + 'Statcast_test.csv')
     print('\n Finshed!')
 
 
