@@ -22,13 +22,13 @@ ap.add_argument('-i', '--input', required=True,
 ap.add_argument("-m", "--model", required=True,
                 help="Specific model to train and determine results. Accepted values are: lr, dt, rf, xg")
 
-ap.add_argument("-o", "--output",nargs=1,
+ap.add_argument("-o", "--output",
                 help='Path to save models in pickle format for future use')
 
 args = vars(ap.parse_args())
 
 DATA = args['input']
-PATH_TO_SAVE_MODELS = args['output']
+PATH_TO_SAVE_MODELS = pathlib.Path(args['output'])
 
 def train_model(csv):
     """Trains a given classifier on the Statcast_train.csv dataset and returns 5-fold cross validation results. 
@@ -44,7 +44,7 @@ def train_model(csv):
     
     df = pd.read_csv(csv)
 
-    print(f"Dataframe shape: {df.shape[0]} rows x {df.shape[1]} columns \n")
+    print(f"\n Dataframe shape: {df.shape[0]} rows x {df.shape[1]} columns \n")
 
     #filter out player_name and target
     print("Dropping unnecessary features \n")
@@ -55,7 +55,7 @@ def train_model(csv):
     lg = LogisticRegression(random_state=777)
     dt = DecisionTreeClassifier(max_depth=4, random_state=777)
     rf = RandomForestClassifier(random_state=777)
-    xg = xgb.XGBClassifier(random_state=777)
+    xg = xgb.XGBClassifier(objective='binary:logistic', n_estimators=100, verbosity=0, random_state=777)
     sampler = RandomUnderSampler(sampling_strategy='auto', random_state=777)
     
     if args['model'] == 'lr':   
@@ -76,7 +76,7 @@ def train_model(csv):
     for result in ['train_accuracy', 'test_accuracy', 'train_f1', 'test_f1', 'train_roc_auc', 'test_roc_auc']:
         print(f"Average {result}: {results[result].mean():.3f} +/- {results[result].std() *2:.3f} ")
         print(f"{result} scores: {results[result]} \n")
-    print(f"\n" + "*" *20 + " Completed " + "*" *20 + "\n")
+    
     
     return pipe
 
@@ -87,21 +87,25 @@ def save_model(clf):
         clf {[sklearn pipeline]} -- scikit-learn pipeline object trained on the training data. 
         Will be saved to path designated in file arguments. 
     """    
-
-    if args['model'] == 'lr': 
-        dump(clf, PATH_TO_SAVE_MODELS + "Logistic_Regression.joblib")  
+    print("Saving Model")
+    if not PATH_TO_SAVE_MODELS.exists():
+            PATH_TO_SAVE_MODELS.mkdir(exist_ok=True, parents=True)
+    
+    if args['model'] == 'lr':
+        dump(clf, str(PATH_TO_SAVE_MODELS) + "/Logistic_Regression.joblib")  
         
     elif args['model'] == 'dt':
-        dump(clf, PATH_TO_SAVE_MODELS + "Decision_Tree.joblib")
+        dump(clf, str(PATH_TO_SAVE_MODELS) + "/Decision_Tree.joblib")
 
     elif args['model'] == 'rf':
-        dump(clf, PATH_TO_SAVE_MODELS + "Random_Forest.joblib")
+        dump(clf, str(PATH_TO_SAVE_MODELS) + "/Random_Forest.joblib")
 
     elif args['model'] == 'xg':
-        dump(clf, PATH_TO_SAVE_MODELS + "XGB.joblib")
+        dump(clf, str(PATH_TO_SAVE_MODELS) + "/XGB.joblib")
     
 
 
 if __name__ == "__main__":
     classifier = train_model(DATA)
     save_model(classifier)
+    print(f"\n" + "*" *20 + " Completed " + "*" *20 + "\n")
